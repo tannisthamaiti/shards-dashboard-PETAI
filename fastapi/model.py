@@ -14,6 +14,7 @@ class FMIModel:
         plt.savefig("output1.png")
 
     def preprocess_output2(self, image_array):
+        image_array[image_array == -9999] = np.nan
         img = image_array[3800:4300]
         img =  img[:,~np.all(np.isnan(img), axis=0)]
         _, thresh1 = cv2.threshold(img, 245, 255, cv2.THRESH_BINARY)

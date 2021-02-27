@@ -5,9 +5,9 @@ import numpy as np
 import io
 
 router = APIRouter()
-
+ 
+#read npz file
 def read_imagefile(file):
-    # read npz file
     arr = np.load(io.BytesIO(file))['data']
     return arr
 

@@ -1,6 +1,6 @@
 from sys import prefix
-from fastapi import FastAPI
 import image_classifier_router
+from fastapi import FastAPI
 
 app = FastAPI()
 app.include_router(image_classifier_router.router, prefix="/Image")
