@@ -1,6 +1,6 @@
 from fastapi import APIRouter,File, UploadFile
 from model import FMIModel
-from starlette.responses import StreamingResponse
+from starlette.responses import StreamingResponse, JSONResponse
 import numpy as np
 import io
 
@@ -15,4 +15,4 @@ def read_imagefile(file):
 async def classify_image(file: UploadFile = File(...)):
     model = FMIModel()
     arr = read_imagefile(await file.read())
-    return StreamingResponse(model.predict(arr), media_type="image/png")
+    return JSONResponse(model.predict(arr))
