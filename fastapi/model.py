@@ -22,7 +22,7 @@ class FMIModel:
         self.stepsize_sim = 1
         self.stepsize_con = 1
         self.stepsize_scr = 0.5
-        # look into how to get this using another npz file
+        # TODO: look into how to get this using another npz file -> line number: 132 in train.py
         self.label_colours = np.random.randint(255, size=(self.nChannel, 3))
         self.maxIter = 1000
         self.use_scribble = False
@@ -69,7 +69,7 @@ class FMIModel:
 
     def train(self):
         # get the network
-        self.model = MyNet(self.data.size(1)).to(self.device)
+        self.model = MyNet(self.data.size(0)).to(self.device)   ## currently passing c from [c,h,w] in train.py h is passed
         self.model.train()
         # similarity loss definition
         loss_fn = torch.nn.CrossEntropyLoss()
@@ -86,7 +86,7 @@ class FMIModel:
         for batch_idx in range(self.maxIter):
             # forwarding
             optimizer.zero_grad()
-            output = self.model(self.data)[0]
+            output = self.model(self.data[None])[0]
             output = output.permute(1, 2, 0).contiguous().view(-1, self.nChannel)
             outputHP = output.reshape((self.im.shape[0], self.im.shape[1], self.nChannel))
             HPy = outputHP[1:, :, :] - outputHP[0:-1, :, :]
@@ -131,7 +131,7 @@ class FMIModel:
         
         # predict
         self.model.eval()
-        output = self.model(self.data)[0]
+        output = self.model(self.data[None])[0]
         output = output.permute(1, 2, 0).contiguous().view(-1, self.nChannel)
         _, target = torch.max(output, 1)
         im_target = target.data.cpu().numpy()
