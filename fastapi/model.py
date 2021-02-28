@@ -24,7 +24,7 @@ class FMIModel:
         self.stepsize_scr = 0.5
         # TODO: look into how to get this using another npz file -> line number: 132 in train.py
         self.label_colours = np.random.randint(255, size=(self.nChannel, 3))
-        self.maxIter = 1000
+        self.maxIter = 200
         self.use_scribble = False
         self.minLabels = 3
 
