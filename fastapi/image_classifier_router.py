@@ -1,4 +1,4 @@
-from fastapi import APIRouter,File, UploadFile
+from fastapi import APIRouter,File, UploadFile, Form
 from model import FMIModel
 from starlette.responses import StreamingResponse, JSONResponse
 import numpy as np
