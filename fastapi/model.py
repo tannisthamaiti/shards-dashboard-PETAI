@@ -27,7 +27,7 @@ class FMIModel:
         self.label_colours = np.random.randint(255, size=(self.nChannel, 3))
         # set this to True if above npz file upload is implemented
         self.args_label_colours = False
-        self.maxIter = 200
+        #self.maxIter = 200
         self.use_scribble = False
         self.minLabels = 3
         self.path = os.path.dirname(os.path.abspath(__file__))
@@ -80,7 +80,7 @@ class FMIModel:
         print("inds_scr:", self.inds_scr.shape)
         print("target_scr:", self.target_scr.shape)
 
-    def train(self):
+    def train(self, maxIter):
         # get the network
         ## currently passing c from [c,h,w] in train.py h is passed
         self.model = MyNet(self.data.size(0)).to(self.device)
@@ -98,7 +98,7 @@ class FMIModel:
         optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=0.9)
         loss = None
 
-        for batch_idx in range(self.maxIter):
+        for batch_idx in range(maxIter):
             # forwarding
             optimizer.zero_grad()
             output = self.model(self.data[None])[0]
@@ -140,9 +140,16 @@ class FMIModel:
         
         # prepare data
         self.prepare_data(arr)
-        
+
+        return {"output1": f"Saved at {self.out_path} + output1.png",
+                "output2": f"Saved at {self.out_path} + output2.png"
+                }
+
+               
+    def predict1(self, maxIter):
+              
         # train model
-        self.train()
+        self.train(maxIter)
         
         # predict
         self.model.eval()
