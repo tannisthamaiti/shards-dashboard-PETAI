@@ -1,3 +1,4 @@
+import os
 from typing import Dict
 import numpy as np
 import cv2
@@ -22,17 +23,23 @@ class FMIModel:
         self.stepsize_sim = 1
         self.stepsize_con = 1
         self.stepsize_scr = 0.5
-        # TODO: look into how to get this using another npz file -> line number: 132 in train.py
+        # TODO: look into how to get this using another npz file -> train.py line no. 132
         self.label_colours = np.random.randint(255, size=(self.nChannel, 3))
-        self.args_label_colours = False ## as we are using randomint above set it True if we upload another npz file
+        # set this to True if above npz file upload is implemented
+        self.args_label_colours = False
         self.maxIter = 200
         self.use_scribble = False
         self.minLabels = 3
+        self.path = os.path.dirname(os.path.abspath(__file__))
+        self.out_path = self.path + "/outputs/"
+        os.makedirs(self.out_path, exist_ok=True)
+        if self.verbose:
+            print(f"Saving all outputs to {self.out_path}")
 
     def preprocess_output1(self, image_array):
         image_array[image_array == -9999] = np.nan
         plt.imshow(image_array[5000:5500,:], cmap='YlOrBr')
-        plt.savefig("outputs/output1.png")
+        plt.savefig(self.out_path + "output1.png")
 
     def preprocess_output2(self, image_array):
         image_array[image_array == -9999] = np.nan
@@ -44,7 +51,7 @@ class FMIModel:
         img = cv2.medianBlur(img, 5)
         edges = cv2.Canny(img, 200, 255, apertureSize = 7)
         plt.imshow(edges, cmap="gray")
-        plt.savefig("outputs/output2.png")
+        plt.savefig(self.out_path + "output2.png")
 
     def load_image(self, img_path):
         im = cv2.imread(img_path)
@@ -65,12 +72,19 @@ class FMIModel:
     def prepare_data(self, arr):
         self.preprocess_output1(arr)
         self.preprocess_output2(arr)
-        self.im, self.data = self.load_image("outputs/output1.png")
-        self.inds_sim, self.inds_scr, self.target_scr = self.load_scribble("outputs/output2.png")
+        self.im, self.data = self.load_image(self.out_path + "output1.png")
+        print("img:", self.im.shape)
+        print("data:", self.data.shape)
+        self.inds_sim, self.inds_scr, self.target_scr = self.load_scribble(self.out_path + "output2.png")
+        print("inds_sim:", self.inds_sim.shape)
+        print("inds_scr:", self.inds_scr.shape)
+        print("target_scr:", self.target_scr.shape)
 
     def train(self):
         # get the network
-        self.model = MyNet(self.data.size(0)).to(self.device)   ## currently passing c from [c,h,w] in train.py h is passed
+        ## currently passing c from [c,h,w] in train.py h is passed
+        self.model = MyNet(self.data.size(0)).to(self.device)
+        print(self.model)
         self.model.train()
         # similarity loss definition
         loss_fn = torch.nn.CrossEntropyLoss()
@@ -140,23 +154,24 @@ class FMIModel:
         im_target_rgb = im_target_rgb.reshape(self.im.shape).astype(np.uint8)
         
         if self.use_scribble:
-            cv2.imwrite("outputs/scribble_output_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".png", im_target_rgb)
+            cv2.imwrite(self.out_path + "scribble_output_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".png", im_target_rgb)
             if not self.args_label_colours:
-                np.save("outputs/scribble_color_coding_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".npy", self.label_colours)
-            m_name = "scribble_checkpoint_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".pth"
-            torch.save(self.model, f"outputs/{m_name}")
+                np.save(self.out_path + "scribble_color_coding_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".npy", self.label_colours)
+            m_name = self.out_path + "scribble_checkpoint_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".pth"
+            torch.save(self.model, f"{m_name}")
         else:
-            cv2.imwrite("outputs/output_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".png", im_target_rgb)
+            cv2.imwrite(self.out_path + "output_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".png", im_target_rgb)
             if not self.args_label_colours:
-                np.save("outputs/color_coding_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".npy", self.label_colours)
-            m_name = "checkpoint_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".pth"
-            torch.save(self.model, f"outputs/{m_name}")
+                np.save(self.out_path + "color_coding_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".npy", self.label_colours)
+            m_name = self.out_path + "checkpoint_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".pth"
+            torch.save(self.model, f"{m_name}")
 
-        return {"output1": "Saved at outputs/output1.png",
-                "output2": "Saved at outputs/output2.png"
+        return {"output1": f"Saved at {self.out_path} + output1.png",
+                "output2": f"Saved at {self.out_path} + output2.png"
                 }
 
 # # test ##
 # if __name__ == "__main__":
 #     im = FMIModel()
 #     print(im.predict(img))
+
