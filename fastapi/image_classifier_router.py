@@ -20,4 +20,4 @@ async def classify_image(file: UploadFile = File(...)):
 @router.post("/predict1")
 async def train_image(maxiters: str = Form(...)):
     model = FMIModel()
-    return JSONResponse(model.predict1(maxiters))
+    return JSONResponse(model.predict1(int(maxiters)))
