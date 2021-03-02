@@ -20,5 +20,5 @@ async def healthcheck():
 
 @app.get("/image_return/{file}")
 async def img_return(file :str):
-    ## add the filename only to get the data
+    ## add the filename only to get the data as image format
     return FileResponse("outputs/"+file+".png")
