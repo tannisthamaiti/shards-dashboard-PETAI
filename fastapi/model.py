@@ -167,15 +167,15 @@ class FMIModel:
             m_name = self.out_path + "scribble_checkpoint_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".pth"
             torch.save(self.model, f"{m_name}")
         else:
-            cv2.imwrite(self.out_path + "output_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".png", im_target_rgb)
+            #cv2.imwrite(self.out_path + "output_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".png", im_target_rgb)
+            cv2.imwrite(self.out_path + "final_image" + ".png", im_target_rgb)
             if not self.args_label_colours:
-                np.save(self.out_path + "color_coding_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".npy", self.label_colours)
-            m_name = self.out_path + "checkpoint_" + str(self.stepsize_con) + "_" + str(self.nLabels) + ".pth"
+                np.save(self.out_path + "color_coding_" + str(self.stepsize_con) + ".npy", self.label_colours)
+            m_name = self.out_path + "checkpoint_" + str(self.stepsize_con) + ".pth"
             torch.save(self.model, f"{m_name}")
 
-        return {"output1": f"Saved at {self.out_path} + output1.png",
-                "output2": f"Saved at {self.out_path} + output2.png"
-                }
+        return {"output": f"Saved at {self.out_path} + final_image.png"
+            }
 
 # # test ##
 # if __name__ == "__main__":
