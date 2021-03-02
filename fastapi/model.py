@@ -73,18 +73,20 @@ class FMIModel:
         self.preprocess_output1(arr)
         self.preprocess_output2(arr)
         self.im, self.data = self.load_image(self.out_path + "output1.png")
-        print("img:", self.im.shape)
-        print("data:", self.data.shape)
         self.inds_sim, self.inds_scr, self.target_scr = self.load_scribble(self.out_path + "output2.png")
-        print("inds_sim:", self.inds_sim.shape)
-        print("inds_scr:", self.inds_scr.shape)
-        print("target_scr:", self.target_scr.shape)
+        if self.verbose:
+            print("img:", self.im.shape)
+            print("data:", self.data.shape)
+            print("inds_sim:", self.inds_sim.shape)
+            print("inds_scr:", self.inds_scr.shape)
+            print("target_scr:", self.target_scr.shape)
 
     def train(self, maxIter):
         # get the network
         ## currently passing c from [c,h,w] in train.py h is passed
         self.model = MyNet(self.data.size(0)).to(self.device)
-        print(self.model)
+        if self.verbose:
+            print(self.model)
         self.model.train()
         # similarity loss definition
         loss_fn = torch.nn.CrossEntropyLoss()
