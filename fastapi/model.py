@@ -36,14 +36,16 @@ class FMIModel:
         if self.verbose:
             print(f"Saving all outputs to {self.out_path}")
 
-    def preprocess_output1(self, image_array):
+    def preprocess_output1(self, image_array,lowerbound,upperbound):
         image_array[image_array == -9999] = np.nan
-        plt.imshow(image_array[5000:5500,:], cmap='YlOrBr')
+        plt.imshow(image_array[lowerbound:upperbound,:], cmap='YlOrBr')
+        plt.ylabel("Depth (ft/m)")
+        plt.xlabel("Azimuth (degree)")
         plt.savefig(self.out_path + "output1.png")
 
-    def preprocess_output2(self, image_array):
+    def preprocess_output2(self, image_array,lowerbound,upperbound):
         image_array[image_array == -9999] = np.nan
-        img = image_array[3800:4300]
+        img = image_array[lowerbound:upperbound]
         img =  img[:,~np.all(np.isnan(img), axis=0)]
         _, thresh1 = cv2.threshold(img, 245, 255, cv2.THRESH_BINARY)
         img_bw = 255 - thresh1
@@ -51,6 +53,8 @@ class FMIModel:
         img = cv2.medianBlur(img, 5)
         edges = cv2.Canny(img, 200, 255, apertureSize = 7)
         plt.imshow(edges, cmap="gray")
+        plt.ylabel("Depth (ft/m)")
+        plt.xlabel("Azimuth (degree)")
         plt.savefig(self.out_path + "output2.png")
 
     def load_image(self, img_path):
@@ -69,24 +73,25 @@ class FMIModel:
         target_scr = torch.from_numpy(mask.astype(np.int)).to(self.device)
         return inds_sim, inds_scr, Variable(target_scr)
     
-    def prepare_data(self, arr):
-        self.preprocess_output1(arr)
-        self.preprocess_output2(arr)
+    def prepare_data(self, arr,depth_val):
+        yrange=depth_val.split(':')
+        lowerbound=int(yrange[0])
+        upperbound=int(yrange[1])
+        self.preprocess_output1(arr,lowerbound,upperbound)
+        self.preprocess_output2(arr,lowerbound,upperbound)
         self.im, self.data = self.load_image(self.out_path + "output1.png")
+        print("img:", self.im.shape)
+        print("data:", self.data.shape)
         self.inds_sim, self.inds_scr, self.target_scr = self.load_scribble(self.out_path + "output2.png")
-        if self.verbose:
-            print("img:", self.im.shape)
-            print("data:", self.data.shape)
-            print("inds_sim:", self.inds_sim.shape)
-            print("inds_scr:", self.inds_scr.shape)
-            print("target_scr:", self.target_scr.shape)
+        print("inds_sim:", self.inds_sim.shape)
+        print("inds_scr:", self.inds_scr.shape)
+        print("target_scr:", self.target_scr.shape)
 
     def train(self, maxIter):
         # get the network
         ## currently passing c from [c,h,w] in train.py h is passed
         self.model = MyNet(self.data.size(0)).to(self.device)
-        if self.verbose:
-            print(self.model)
+        print(self.model)
         self.model.train()
         # similarity loss definition
         loss_fn = torch.nn.CrossEntropyLoss()
@@ -138,10 +143,10 @@ class FMIModel:
                     print ("nLabels", self.nLabels, "reached minLabels", self.minLabels, ".")
                 break
 
-    def predict(self, arr):
+    def predict(self, arr,depth_val):
         
         # prepare data
-        self.prepare_data(arr)
+        self.prepare_data(arr,depth_val)
 
         return {"output1": f"Saved at {self.out_path} + output1.png",
                 "output2": f"Saved at {self.out_path} + output2.png"
