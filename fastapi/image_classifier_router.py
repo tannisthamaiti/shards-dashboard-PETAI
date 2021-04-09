@@ -13,9 +13,9 @@ def read_imagefile(file):
     return arr
 
 @router.post("/predict")
-async def classify_image(file: UploadFile = File(...)):
+async def classify_image(file: UploadFile = File(...),depth_val: str = Form(...)):
     arr = read_imagefile(await file.read())
-    return JSONResponse(model.predict(arr))
+    return JSONResponse(model.predict(arr,depth_val))
    
 @router.post("/predict1")
 async def train_image(maxiters: str = Form(...)):
